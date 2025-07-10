@@ -1,4 +1,7 @@
 import jwt from "jsonwebtoken";
+import memberSchema from "../models/memberSchema.js";
+import qrcode from "qrcode";
+import { VALID_ZONES } from "../config/zone.js";
 
 export async function adminLogin(req, res) {
   const { email, password } = req.body;
@@ -23,9 +26,68 @@ export async function adminLogin(req, res) {
 }
 
 export async function getallMembers(req, res) {
-  res.json("success");
+  const users = await memberSchema.find().lean();
+  res.status(201).json({
+    success: true,
+    message: "Members fetched successfully",
+    members: users,
+  });
 }
 
 export async function addmember(req, res) {
-  const { email, name, zone } = req.body;
+  try {
+    console.log(req.body);
+
+    const { email, password, zone, membershipType, name, phone } = req.body;
+
+    // Check if user already exists
+    const userExist = await memberSchema.findOne({ email }).lean();
+    if (userExist) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User already exists" });
+    }
+
+    // Validate zone
+    if (!VALID_ZONES.includes(zone)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid zone selected." });
+    }
+
+    // Create new member
+    const newMember = new memberSchema({
+      name,
+      email,
+      password,
+      phone,
+      zone,
+      membershipType,
+      status: "active",
+    });
+
+    await newMember.save();
+
+    const qr = await qrcode.toDataURL(newMember._id.toString());
+
+    newMember.qrCode = qr;
+    await newMember.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Member added successfully",
+      qrCode: newMember.qrCode,
+    });
+  } catch (error) {
+    console.error("❌ Error in addmember:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+}
+
+export async function getmemberbyId(req,res){
+
 }
