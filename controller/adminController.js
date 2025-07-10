@@ -15,7 +15,7 @@ export async function adminLogin(req, res) {
       .json({ success: false, message: "Invalid credentials" });
   }
 
-  const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+  const token = jwt.sign({ email, role: "admin" }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
 
@@ -24,4 +24,8 @@ export async function adminLogin(req, res) {
 
 export async function getallMembers(req, res) {
   res.json("success");
+}
+
+export async function addmember(req, res) {
+  const { email, name, zone } = req.body;
 }

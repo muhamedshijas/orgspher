@@ -1,6 +1,11 @@
 import express from "express";
-import { adminLogin, getallMembers } from "../controller/adminController.js";
+import {
+  addmember,
+  adminLogin,
+  getallMembers,
+} from "../controller/adminController.js";
 import verifyToken from "../middlewares/adminAuthMiddleWare.js";
+import { authorizeRole } from "../middlewares/authorizeRole.js";
 const router = express.Router();
 
 /**
@@ -55,6 +60,12 @@ router.post("/login", adminLogin);
  *         description: Unauthorized – token required
  */
 
-router.get("/getallmembers", verifyToken, getallMembers);
+router.get(
+  "/getallmembers",
+  verifyToken,
+  authorizeRole("admin"),
+  getallMembers
+);
 export default router;
- 
+
+router.post("/addmember", verifyToken, addmember);
