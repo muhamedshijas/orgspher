@@ -9,14 +9,20 @@ const options = {
       version: "1.0.0",
       description: "Membership Management System - Swagger Documentation"
     },
-    servers: [
-      {
-        url: "http://localhost:5000", // change if deploying
+    servers: [{ url: "http://localhost:5000" }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
       }
-    ]
+    }
   },
-  apis: ["./routes/*.js"], // path to your route files with Swagger comments
+  apis: ["./routes/*.js"],
 };
+
 
 const swaggerSpec = swaggerJsdoc(options);
 

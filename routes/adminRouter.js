@@ -1,4 +1,6 @@
 import express from "express";
+import { adminLogin, getallMembers } from "../controller/adminController.js";
+import verifyToken from "../middlewares/adminAuthMiddleWare.js";
 const router = express.Router();
 
 /**
@@ -10,7 +12,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/login:
+ * /admin/login:
  *   post:
  *     summary: Login for Admin
  *     tags: [Admin]
@@ -36,5 +38,23 @@ const router = express.Router();
  *       401:
  *         description: Invalid credentials
  */
+router.post("/login", adminLogin);
 
+/**
+ * @swagger
+ * /admin/getallmembers:
+ *   get:
+ *     summary: For viewing all members
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Returns all members
+ *       401:
+ *         description: Unauthorized – token required
+ */
+
+router.get("/getallmembers", verifyToken, getallMembers);
 export default router;
+ 

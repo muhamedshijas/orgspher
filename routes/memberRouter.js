@@ -33,7 +33,7 @@ router.get("/", (req, res) => {
  *          description: User Edited successfull
  */
 router.post("/edit", (req, res) => {
-  res.send("ueser can edit here");
+ return res.send("ueser can edit here");
 });	
 
 /**
