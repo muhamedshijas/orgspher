@@ -9,7 +9,7 @@ const options = {
       version: "1.0.0",
       description: "Membership Management System - Swagger Documentation"
     },
-    servers: [{ url: "https://orgspher.onrender.com" }],
+    servers: [{ url: "http://localhost:5000" }],
     components: {
       securitySchemes: {
         bearerAuth: {

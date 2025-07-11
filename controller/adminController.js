@@ -36,7 +36,6 @@ export async function getallMembers(req, res) {
 
 export async function addmember(req, res) {
   try {
-
     const { email, password, zone, membershipType, name, phone } = req.body;
 
     // Check if user already exists
@@ -89,13 +88,16 @@ export async function addmember(req, res) {
 
 export async function getmemberbyId(req, res) {
   const id = req.params.id;
-  const member = await memberSchema.findOne({ _id: id }).select('_id name email qrCode status membershipType zone').lean();
+  const member = await memberSchema
+    .findOne({ _id: id })
+    .select("_id name email qrCode status membershipType zone")
+    .lean();
   if (!member) {
     return res.status(400).json({ success: false, message: "Invalid id." });
   }
   res.status(201).json({
     success: true,
-    message: "Member added successfully",
+    message: "Member Fetched successfully",
     member,
   });
 }
@@ -139,7 +141,7 @@ export async function enableUser(req, res) {
 
     res
       .status(200)
-      .json({ success: true, message: "Member disabled successfully." });
+      .json({ success: true, message: "Member Enabled successfully." });
   } catch (error) {
     console.error("Error disabling member:", error.message);
     res.status(500).json({ success: false, message: "Server error." });

@@ -1,0 +1,63 @@
+import { VALID_MEMBERSHIPS, VALID_ZONES } from "../config/utils.js";
+import eventSchema from "../models/eventSchema.js";
+
+export async function addEvent(req, res) {
+  try {
+    const { title, zone, location, membershipAllowed } = req.body;
+
+    if (!title || !zone || !location || !membershipAllowed) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields.",
+      });
+    }
+
+    const invalidZones = zone.filter((z) => !VALID_ZONES.includes(z));
+    if (invalidZones.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid zones: ${invalidZones.join(", ")}`,
+      });
+    }
+
+    const invalidMemberships = membershipAllowed.filter(
+      (m) => !VALID_MEMBERSHIPS.includes(m)
+    );
+    if (invalidMemberships.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid membership types: ${invalidMemberships.join(", ")}`,
+      });
+    }
+
+    const existingevent = await eventSchema
+      .findOne({ title, status: "upcoming", zone })
+      .lean();
+
+    if (existingevent) {
+      return res.status(400).json({
+        success: false,
+        message: `Event already exist`,
+      });
+    }
+    const event = await eventSchema.create({
+      title,
+      zone,
+      location,
+      membershipsAllowed: membershipAllowed,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Event added successfully",
+      event,
+    });
+  } catch (error) {
+    console.error("Error adding event:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while adding event",
+      error: error.message,
+    });
+  }
+}
