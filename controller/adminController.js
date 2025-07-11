@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import memberSchema from "../models/memberSchema.js";
 import qrcode from "qrcode";
-import { VALID_ZONES } from "../config/zone.js";
+import { VALID_ZONES } from "../config/utils.js";
+
 
 export async function adminLogin(req, res) {
   const { email, password } = req.body;

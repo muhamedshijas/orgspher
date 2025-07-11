@@ -63,7 +63,8 @@ router.post("/login", adminLogin);
  *               - name
  *               - email
  *               - zone
- *               - membershipType
+ *               - phone
+ *               - password
  *             properties:
  *               name:
  *                 type: string
@@ -74,9 +75,12 @@ router.post("/login", adminLogin);
  *               zone:
  *                 type: string
  *                 example: North
- *               membershipType:
- *                 type: string
- *                 example: Premium
+ *               phone:
+ *                  type: Number
+ *                  example: 9876543210
+ *               password:
+ *                  type: string
+ *                  example: as123456
  *     responses:
  *       201:
  *         description: Member added successfully
