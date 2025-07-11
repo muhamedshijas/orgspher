@@ -88,6 +88,17 @@ export async function addmember(req, res) {
   }
 }
 
-export async function getmemberbyId(req,res){
+export async function getmemberbyId(req, res) {
+  const id = req.params.id;
+  const member = await memberSchema.findOne({ _id: id }).lean();
+  if (!member) {
+    return res.status(400).json({ success: false, message: "Invalid id." });
+  }
+  res.status(201).json({
+    success: true,
+    message: "Member added successfully",
+    member,
+  });
 
+  console.log(member);
 }

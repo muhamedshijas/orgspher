@@ -110,7 +110,34 @@ router.get(
   authorizeRole("admin"),
   getallMembers
 );
-
-router.get("/getmemberbyId",getmemberbyId)
+/**
+ * @swagger
+ * /admin/getmemberbyId/{id}:
+ *   get:
+ *     summary: Get a member by ID (via URL param)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Member ID to fetch
+ *     responses:
+ *       200:
+ *         description: Successfully fetched member
+ *       400:
+ *         description: Invalid ID format
+ *       404:
+ *         description: Member not found
+ */
+router.get(
+  "/getmemberbyId/:id",
+  verifyToken,
+  authorizeRole("admin"),
+  getmemberbyId
+);
 
 export default router;
