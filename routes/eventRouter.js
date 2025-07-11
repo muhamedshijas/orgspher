@@ -1,7 +1,7 @@
 import express from "express";
 import verifyToken from "../middlewares/adminAuthMiddleWare.js";
 import { authorizeRole } from "../middlewares/authorizeRole.js";
-import { addEvent } from "../controller/eventController.js";
+import { addEvent, listUpcomingEvents } from "../controller/eventController.js";
 
 const router = express.Router();
 /**
@@ -53,5 +53,28 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/addevent", verifyToken, authorizeRole("admin"),addEvent);
+router.post("/addevent", verifyToken, authorizeRole("admin"), addEvent);
+
+/**
+ * @swagger
+ * /event/listupcomingevents:
+ *   get:
+ *     summary: Get all upcoming events
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully fetched all upcoming events
+ *       401:
+ *         description: Unauthorized – token required
+ *       403:
+ *         description: Forbidden – no access
+ */
+router.get(
+  "/listupcomingevents",
+  verifyToken,
+  authorizeRole("admin", "member"),
+  listUpcomingEvents
+);
 export default router;

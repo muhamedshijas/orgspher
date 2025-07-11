@@ -61,3 +61,15 @@ export async function addEvent(req, res) {
     });
   }
 }
+
+export async function listUpcomingEvents(req, res) {
+  const events = await eventSchema.find({ status: "upcoming" }).lean();
+  if (events.length == 0) {
+    return res
+      .status(404)
+      .json({ success: false, message: `No upcomingEvents` });
+  }
+  return res
+    .status(200)
+    .json({ success: true, message: "Upcoming Events", events });
+}
