@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import memberSchema from "../models/memberSchema.js";
 import qrcode from "qrcode";
-import { VALID_ZONES } from "../config/utils.js";
+import { VALID_MEMBERSHIPS, VALID_ZONES } from "../config/utils.js";
 
 export async function adminLogin(req, res) {
   const { email, password } = req.body;
@@ -146,5 +146,79 @@ export async function enableUser(req, res) {
   } catch (error) {
     console.error("Error disabling member:", error.message);
     res.status(500).json({ success: false, message: "Server error." });
+  }
+}
+
+export async function filterByZone(req, res) {
+  try {
+    const zone = req.params.zone;
+
+    if (!VALID_ZONES.includes(zone)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid zone selected." });
+    }
+
+    const members = await memberSchema
+      .find({ zone })
+      .select("name qrCode zone membershipType")
+      .lean();
+
+    if (members.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: `No members found in zone: ${zone}` });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Members fetched successfully for zone: ${zone}`,
+      data: members,
+    });
+  } catch (error) {
+    console.error("Error filtering members by zone:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while filtering members.",
+      error: error.message,
+    });
+  }
+}
+
+export async function filterByMembership(req, res) {
+  try {
+    const membership = req.params.membership;
+    console.log(membership);
+
+    if (!VALID_MEMBERSHIPS.includes(membership)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid membership selected." });
+    }
+
+    const members = await memberSchema
+      .find({ membershipType: membership })
+      .select("name qrCode zone membershipType")
+      .lean();
+
+    if (members.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No members found in Membership Type: ${membership}`,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Members fetched successfully for Membership Type: ${membership}`,
+      data: members,
+    });
+  } catch (error) {
+    console.error("Error filtering members by membership Type:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while filtering members.",
+      error: error.message,
+    });
   }
 }

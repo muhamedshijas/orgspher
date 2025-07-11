@@ -4,6 +4,8 @@ import {
   adminLogin,
   disableUser,
   enableUser,
+  filterByMembership,
+  filterByZone,
   getallMembers,
   getmemberbyId,
 } from "../controller/adminController.js";
@@ -171,7 +173,12 @@ router.get(
  *       404:
  *         description: Member not found
  */
-router.put("/disableuser/:id", disableUser);
+router.put(
+  "/disableuser/:id",
+  verifyToken,
+  authorizeRole("admin"),
+  disableUser
+);
 /**
  * @swagger
  * /admin/enableuser/{id}:
@@ -197,5 +204,64 @@ router.put("/disableuser/:id", disableUser);
  *       404:
  *         description: Member not found
  */
-router.put("/enableuser/:id", enableUser);
+router.put("/enableuser/:id", verifyToken, authorizeRole("admin"), enableUser);
+/**
+ * @swagger
+ * /admin/filteruserbyzone/{zone}:
+ *   get:
+ *     summary: Filter  members by Zone (via URL param)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: zone
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: "Zone to fetch [Accepted Values: North, South, East, West, Central]"
+ *     responses:
+ *       200:
+ *         description: Successfully fetched member
+ *       400:
+ *         description: Invalid Zone Selected
+ *       404:
+ *         description: Member not found
+ */
+router.get(
+  "/filteruserbyzone/:zone",
+  verifyToken,
+  authorizeRole("admin"),
+  filterByZone
+);
+
+/**
+ * @swagger
+ * /admin/filteruserbymembership/{membership}:
+ *   get:
+ *     summary: Filter  members by membership (via URL param)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: membership
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: "Membership to fetch [Accepted Values: Bronze, Silver, Gold, Platinum]"
+ *     responses:
+ *       200:
+ *         description: Successfully fetched member
+ *       400:
+ *         description: Invalid Zone Selected
+ *       404:
+ *         description: Member not found
+ */
+router.get(
+  "/filteruserbymembership/:membership",
+  verifyToken,
+  authorizeRole("admin"),
+  filterByMembership
+);
 export default router;
