@@ -9,7 +9,7 @@ const options = {
       version: "1.0.0",
       description: "Membership Management System - Swagger Documentation"
     },
-    servers: [{ url: "https://orgspher.onrender.com" }],
+    servers: [{ url: "https://orgspher.onrender.com" },],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -27,3 +27,7 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 export { swaggerUi, swaggerSpec };
+
+
+// dev url https://orgspher.onrender.com
+// base url http://localhost:5000/
