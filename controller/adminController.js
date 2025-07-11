@@ -188,7 +188,6 @@ export async function filterByZone(req, res) {
 export async function filterByMembership(req, res) {
   try {
     const membership = req.params.membership;
-    console.log(membership);
 
     if (!VALID_MEMBERSHIPS.includes(membership)) {
       return res
@@ -215,6 +214,42 @@ export async function filterByMembership(req, res) {
     });
   } catch (error) {
     console.error("Error filtering members by membership Type:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while filtering members.",
+      error: error.message,
+    });
+  }
+}
+
+export async function filterByStatus(req, res) {
+  try {
+    const status = req.params.status;
+    if (!["active", "disabled"].includes(status)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid status selected." });
+    }
+
+    const members = await memberSchema
+      .find({ status })
+      .select("name qrCode zone membershipType status")
+      .lean();
+
+    if (members.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No members found in status : ${status}`,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Members fetched successfully for status: ${status}`,
+      data: members,
+    });
+  } catch (error) {
+    console.error("Error filtering members by status:", error.message);
     return res.status(500).json({
       success: false,
       message: "Server error while filtering members.",

@@ -5,6 +5,7 @@ import {
   disableUser,
   enableUser,
   filterByMembership,
+  filterByStatus,
   filterByZone,
   getallMembers,
   getmemberbyId,
@@ -263,5 +264,35 @@ router.get(
   verifyToken,
   authorizeRole("admin"),
   filterByMembership
+);
+
+/**
+ * @swagger
+ * /admin/filteruserbystatus/{status}:
+ *   get:
+ *     summary: Filter  members by status (via URL param)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: status
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: "Status to fetch [Accepted Values: active , disabled ]"
+ *     responses:
+ *       200:
+ *         description: Successfully fetched member
+ *       400:
+ *         description: Invalid status Selected
+ *       404:
+ *         description: Member not found
+ */
+router.get(
+  "/filteruserbystatus/:status",
+  verifyToken,
+  authorizeRole("admin"),
+  filterByStatus
 );
 export default router;

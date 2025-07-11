@@ -6,18 +6,15 @@ const verifyToken = (req, res, next) => {
   // Check if token exists
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     console.log("no token provided");
-    
+
     return res.status(401).json({ message: "Unauthorized: No token provided" });
   }
 
   const token = authHeader.split(" ")[1]; // Get token from "Bearer <token>"
 
   try {
-    
-    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded; // Optional: store user info in req
-    console.log("✅ Authorized user:", decoded); // 👈 Add this line for debug
     next(); // Token is valid → proceed
   } catch (error) {
     console.log("❌ Invalid token:", error.message); // 👈 Also useful
