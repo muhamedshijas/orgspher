@@ -66,9 +66,9 @@ router.get("/viewprofile", verifyToken, authorizeRole("member"), viewProfile);
 
 /**
  * @swagger
- * /submitmembershippayment:
+ * /submitMembershipPayment:
  *   post:
- *     summary: Submit payment for membership upgrade (Members only)
+ *     summary: Submit membership upgrade payment
  *     tags: [Member]
  *     security:
  *       - bearerAuth: []
@@ -84,26 +84,29 @@ router.get("/viewprofile", verifyToken, authorizeRole("member"), viewProfile);
  *             properties:
  *               amount:
  *                 type: number
+ *                 description: >
+ *                   Enter the membership amount only. Accepted values:
+ *                   100 = Bronze,
+ *                   200 = Silver,
+ *                   300 = Gold,
+ *                   500 = Platinum
  *                 example: 300
  *               paymentMode:
  *                 type: string
- *                 enum: [cash, upi]
+ *                 enum: [cash, upi, online, bank]
  *                 example: upi
  *               receipt:
  *                 type: string
  *                 format: binary
- *                 description: Optional receipt image/pdf file
+ *                 description: Upload receipt image or PDF
  *     responses:
  *       201:
  *         description: Payment submitted successfully
  *       400:
- *         description: Validation error (missing fields or wrong amount)
- *       401:
- *         description: Unauthorized – token missing or invalid
+ *         description: Invalid input
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
-
 router.post(
   "/submitmembershippayment",
   verifyToken,

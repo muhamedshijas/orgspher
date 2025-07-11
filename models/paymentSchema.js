@@ -34,6 +34,10 @@ const paymentSchema = new mongoose.Schema(
       enum: ["pending", "paid", "rejected"],
       default: "pending",
     },
+    rejectionReason: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

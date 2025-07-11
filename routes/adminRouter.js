@@ -10,6 +10,8 @@ import {
   filterByZone,
   getallMembers,
   getmemberbyId,
+  getPaymentsbyPaymentType,
+  verifyMembershipPayment,
 } from "../controller/adminController.js";
 import verifyToken from "../middlewares/adminAuthMiddleWare.js";
 import { authorizeRole } from "../middlewares/authorizeRole.js";
@@ -344,4 +346,65 @@ router.put("/enableuser/:id", verifyToken, authorizeRole("admin"), enableUser);
  */
 router.put("/editmember", verifyToken, authorizeRole("admin"), editMember);
 
+/**
+ * @swagger
+ * /admin/filterpaymentbytype/{type}:
+ *   get:
+ *     summary: Filter  payments by Payment type (via URL param)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: type
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: "type of payment  [Accepted Values: event , membership]"
+ *     responses:
+ *       200:
+ *         description: Successfully fetched payments
+ *       400:
+ *         description: Invalid type of payment Selected
+ *       404:
+ *         description: payments not found
+ */
+router.get(
+  "/filterpaymentbytype/:type",
+  verifyToken,
+  authorizeRole("admin"),
+  getPaymentsbyPaymentType
+);
 export default router;
+
+/**
+ * @swagger
+ * /admin/verifymembershippayment/{id}:
+ *   put:
+ *     summary: verify membership   (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payment to verify
+ *     responses:
+ *       200:
+ *         description: payment updated successfully
+ *       401:
+ *         description: Unauthorized – token required
+ *       403:
+ *         description: Forbidden – admin only
+ *       404:
+ *         description: payment not found
+ */
+router.put(
+  "/verifymembershippayment/:id",
+  verifyToken,
+  authorizeRole("admin"),
+  verifyMembershipPayment
+);

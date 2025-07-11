@@ -1,7 +1,12 @@
 import jwt from "jsonwebtoken";
 import memberSchema from "../models/memberSchema.js";
 import qrcode from "qrcode";
-import { VALID_MEMBERSHIPS, VALID_ZONES } from "../config/utils.js";
+import {
+  MEMBERSHIP_FEES,
+  VALID_MEMBERSHIPS,
+  VALID_ZONES,
+} from "../config/utils.js";
+import paymentSchema from "../models/paymentSchema.js";
 
 export async function adminLogin(req, res) {
   const { email, password } = req.body;
@@ -294,6 +299,126 @@ export async function editMember(req, res) {
     return res.status(500).json({
       success: false,
       message: "Server error while updating member details.",
+      error: error.message,
+    });
+  }
+}
+
+export async function getPaymentsbyPaymentType(req, res) {
+  const type = req.params.type;
+  console.log(type);
+  if (!["event", "membership"].includes(type)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid type selected." });
+  }
+
+  const payments = await paymentSchema
+    .find({ type: type })
+    .select("member receiptUrl amount")
+    .lean();
+
+  if (payments.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: `No payment found in   ${type}`,
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: `payments fetched successfully for  ${type}`,
+    data: payments,
+  });
+}
+
+export async function verifyMembershipPayment(req, res) {
+  try {
+    const paymentId = req.params.id;
+
+    // 1. Find the payment
+    const payment = await paymentSchema.findOne({ _id: paymentId }).lean();
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    if (payment.type !== "membership") {
+      return res.status(400).json({
+        success: false,
+        message: "This is not a membership payment",
+      });
+    }
+
+    // 2. Validate receipt
+    if (!payment.receiptUrl) {
+      await paymentSchema.findByIdAndUpdate(paymentId, {
+        status: "rejected",
+        rejectionReason: "No receipt uploaded",
+      });
+      return res.status(400).json({
+        success: false,
+        message: "Payment rejected: No receipt uploaded",
+      });
+    }
+
+    // 3. Get member
+    const member = await memberSchema.findById(payment.member);
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: "Member not found",
+      });
+    }
+
+    const amount = payment.amount;
+    const newMembershipEntry = Object.entries(MEMBERSHIP_FEES).find(
+      ([_, fee]) => fee === amount
+    );
+
+    if (!newMembershipEntry) {
+      await paymentSchema.findByIdAndUpdate(paymentId, { status: "rejected" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment amount. No matching membership type.",
+      });
+    }
+
+    const [newType] = newMembershipEntry;
+
+    // 4. Prevent downgrade or same level
+    const levels = ["Bronze", "Silver", "Gold", "Platinum"];
+    const currentIndex = levels.indexOf(member.membershipType);
+    const newIndex = levels.indexOf(newType);
+
+    if (newIndex <= currentIndex) {
+      await paymentSchema.findByIdAndUpdate(paymentId, { status: "rejected" });
+      return res.status(400).json({
+        success: false,
+        message: `Cannot downgrade or assign same level. Current: ${member.membershipType}, Submitted: ${newType}`,
+      });
+    }
+
+    // 5. Approve payment and update member
+    await Promise.all([
+      memberSchema.findByIdAndUpdate(member._id, {
+        membershipType: newType,
+      }),
+      paymentSchema.findByIdAndUpdate(paymentId, {
+        status: "paid",
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: `Membership upgraded to ${newType} and payment marked as paid.`,
+    });
+  } catch (error) {
+    console.error("Error verifying payment:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
       error: error.message,
     });
   }

@@ -1,7 +1,7 @@
 import memberSchema from "../models/memberSchema.js";
 import jwt from "jsonwebtoken";
 import paymentSchema from "../models/paymentSchema.js";
-import { MEMBERSHIP_UPGRADE_FEES } from "../config/utils.js";
+import { MEMBERSHIP_FEES } from "../config/utils.js";
 
 export async function memberLogin(req, res) {
   const { email, password } = req.body;
@@ -51,6 +51,21 @@ export async function submitMembershipPayment(req, res) {
       });
     }
 
+    const numericAmount = Number(amount);
+    const targetMembership = Object.entries(MEMBERSHIP_FEES).find(
+      ([_, fee]) => fee === numericAmount
+    );
+
+    if (!targetMembership) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid amount: no matching membership type found.`,
+      });
+    }
+
+    const [newType, fee] = targetMembership;
+
+    // ✅ Get current member
     const member = await memberSchema.findById(memberId);
     if (!member) {
       return res.status(404).json({
@@ -60,28 +75,46 @@ export async function submitMembershipPayment(req, res) {
     }
 
     const currentType = member.membershipType;
-    const upgradeInfo = MEMBERSHIP_UPGRADE_FEES[currentType];
 
-    if (!upgradeInfo) {
+    // Membership levels ordered by rank
+    const levels = ["Bronze", "Silver", "Gold", "Platinum"];
+    const currentIndex = levels.indexOf(currentType);
+    const newIndex = levels.indexOf(newType);
+
+    if (newIndex === -1 || currentIndex === -1) {
       return res.status(400).json({
         success: false,
-        message: "You are already at the highest membership level.",
+        message: "Invalid membership type comparison",
       });
     }
 
-    if (Number(amount) !== upgradeInfo.amount) {
+    if (newIndex <= currentIndex) {
       return res.status(400).json({
         success: false,
-        message: `To upgrade from ${currentType} to ${upgradeInfo.next}, you must pay ₹${upgradeInfo.amount}.`,
+        message: `You are already ${currentType} or higher. Upgrade not allowed.`,
       });
     }
+    const existingPending = await paymentSchema.findOne({
+      member: memberId,
+      type: "membership",
+      status: "pending",
+    });
 
-    const receiptUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    if (existingPending) {
+      return res.status(400).json({
+        success: false,
+        message: "You already have a membership payment pending approval.",
+        payment: existingPending, // optional: return the pending one
+      });
+    }
+    const receiptUrl = req.file
+      ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+      : null;
 
     const payment = await paymentSchema.create({
       member: memberId,
       type: "membership",
-      amount: Number(amount),
+      amount: numericAmount,
       paymentMode,
       receiptUrl,
       status: "pending",
@@ -89,7 +122,7 @@ export async function submitMembershipPayment(req, res) {
 
     return res.status(201).json({
       success: true,
-      message: `Payment submitted. Awaiting admin approval to upgrade to ${upgradeInfo.next}.`,
+      message: `Payment submitted for ${newType}. Awaiting admin approval.`,
       payment,
     });
   } catch (error) {
