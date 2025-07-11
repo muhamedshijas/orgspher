@@ -3,6 +3,7 @@ import {
   addmember,
   adminLogin,
   disableUser,
+  editMember,
   enableUser,
   filterByMembership,
   filterByStatus,
@@ -12,6 +13,7 @@ import {
 } from "../controller/adminController.js";
 import verifyToken from "../middlewares/adminAuthMiddleWare.js";
 import { authorizeRole } from "../middlewares/authorizeRole.js";
+import memberSchema from "../models/memberSchema.js";
 const router = express.Router();
 
 /**
@@ -295,4 +297,49 @@ router.get(
   authorizeRole("admin"),
   filterByStatus
 );
+/**
+ * @swagger
+ * /admin/editmember:
+ *   put:
+ *     summary: Edit a  member (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - zone
+ *               - phone
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               email:
+ *                 type: string
+ *                 example: john@example.com
+ *               zone:
+ *                 type: string
+ *                 example: North
+ *               phone:
+ *                  type: Number
+ *                  example: 9876543210
+ *     responses:
+ *       201:
+ *         description: Member Edited successfully
+ *       401:
+ *         description: Unauthorized – token required
+ *       403:
+ *         description: Forbidden – admin access only
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/editmember", verifyToken, authorizeRole("admin"), editMember);
+
+
 export default router;

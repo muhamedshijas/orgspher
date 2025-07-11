@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { STATES } from "mongoose";
 import { VALID_MEMBERSHIPS, VALID_ZONES } from "../config/utils.js";
 
 const memberSchema = new mongoose.Schema(
@@ -12,6 +12,7 @@ const memberSchema = new mongoose.Schema(
       enum: VALID_MEMBERSHIPS,
       default: "Bronze",
     },
+    phone: { type: String, required: true },
     password: { type: String, required: true },
     status: { type: String, enum: ["active", "disabled"], default: "active" },
     qrCode: { type: String }, // base64 string or file path

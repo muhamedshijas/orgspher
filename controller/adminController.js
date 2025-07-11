@@ -36,7 +36,6 @@ export async function getallMembers(req, res) {
 
 export async function addmember(req, res) {
   try {
-    console.log(req.body);
 
     const { email, password, zone, membershipType, name, phone } = req.body;
 
@@ -90,7 +89,7 @@ export async function addmember(req, res) {
 
 export async function getmemberbyId(req, res) {
   const id = req.params.id;
-  const member = await memberSchema.findOne({ _id: id }).lean();
+  const member = await memberSchema.findOne({ _id: id }).select('_id name email qrCode status membershipType zone').lean();
   if (!member) {
     return res.status(400).json({ success: false, message: "Invalid id." });
   }
@@ -99,8 +98,6 @@ export async function getmemberbyId(req, res) {
     message: "Member added successfully",
     member,
   });
-
-  console.log(member);
 }
 
 export async function disableUser(req, res) {
@@ -253,6 +250,48 @@ export async function filterByStatus(req, res) {
     return res.status(500).json({
       success: false,
       message: "Server error while filtering members.",
+      error: error.message,
+    });
+  }
+}
+
+export async function editMember(req, res) {
+  try {
+    const { email, name, phone, zone } = req.body;
+    const member = await memberSchema.findOne({ email });
+    if (!member) {
+      return res
+        .status(404)
+        .json({ success: false, message: `No member found for ${email}` });
+    }
+
+    if (!VALID_ZONES.includes(zone)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid zone selected." });
+    }
+
+    member.name = name || member.name;
+    member.phone = phone || member.phone;
+    member.zone = zone;
+
+    await member.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Member details updated successfully.",
+      member: {
+        name: member.name,
+        email: member.email,
+        phone: member.phone,
+        zone: member.zone,
+      },
+    });
+  } catch (error) {
+    console.error("Error editing member:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating member details.",
       error: error.message,
     });
   }
