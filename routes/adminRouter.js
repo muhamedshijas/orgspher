@@ -2,6 +2,8 @@ import express from "express";
 import {
   addmember,
   adminLogin,
+  disableUser,
+  enableUser,
   getallMembers,
   getmemberbyId,
 } from "../controller/adminController.js";
@@ -144,4 +146,56 @@ router.get(
   getmemberbyId
 );
 
+/**
+ * @swagger
+ * /admin/disableuser/{id}:
+ *   put:
+ *     summary: Disable a member by ID (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the member to disable
+ *     responses:
+ *       200:
+ *         description: Member disabled successfully
+ *       401:
+ *         description: Unauthorized – token required
+ *       403:
+ *         description: Forbidden – admin only
+ *       404:
+ *         description: Member not found
+ */
+router.put("/disableuser/:id", disableUser);
+/**
+ * @swagger
+ * /admin/enableuser/{id}:
+ *   put:
+ *     summary: Enable a member by ID (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the member to Enable
+ *     responses:
+ *       200:
+ *         description: Member Enabled successfully
+ *       401:
+ *         description: Unauthorized – token required
+ *       403:
+ *         description: Forbidden – admin only
+ *       404:
+ *         description: Member not found
+ */
+router.put("/enableuser/:id", enableUser);
 export default router;

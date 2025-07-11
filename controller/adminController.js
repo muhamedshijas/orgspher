@@ -3,7 +3,6 @@ import memberSchema from "../models/memberSchema.js";
 import qrcode from "qrcode";
 import { VALID_ZONES } from "../config/utils.js";
 
-
 export async function adminLogin(req, res) {
   const { email, password } = req.body;
 
@@ -102,4 +101,50 @@ export async function getmemberbyId(req, res) {
   });
 
   console.log(member);
+}
+
+export async function disableUser(req, res) {
+  try {
+    const id = req.params.id;
+    console.log("Disabling member ID:", id);
+
+    const member = await memberSchema.findById(id).lean();
+    if (!member) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Member not found." });
+    }
+
+    await memberSchema.findByIdAndUpdate(id, { status: "disabled" });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Member disabled successfully." });
+  } catch (error) {
+    console.error("Error disabling member:", error.message);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+}
+
+export async function enableUser(req, res) {
+  try {
+    const id = req.params.id;
+    console.log("Disabling member ID:", id);
+
+    const member = await memberSchema.findById(id).lean();
+    if (!member) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Member not found." });
+    }
+
+    await memberSchema.findByIdAndUpdate(id, { status: "active" });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Member disabled successfully." });
+  } catch (error) {
+    console.error("Error disabling member:", error.message);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
 }
