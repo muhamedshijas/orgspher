@@ -1,7 +1,12 @@
 import express from "express";
-import { memberLogin, viewProfile } from "../controller/memberController.js";
+import {
+  memberLogin,
+  submitMembershipPayment,
+  viewProfile,
+} from "../controller/memberController.js";
 import verifyToken from "../middlewares/adminAuthMiddleWare.js";
 import { authorizeRole } from "../middlewares/authorizeRole.js";
+import upload from "../middlewares/multer.js";
 const router = express.Router();
 
 /**
@@ -57,6 +62,53 @@ router.post("/login", memberLogin);
  *       403:
  *         description: Forbidden – member access only
  */
-router.get("/viewprofile", verifyToken, authorizeRole("member"),viewProfile);
+router.get("/viewprofile", verifyToken, authorizeRole("member"), viewProfile);
 
+/**
+ * @swagger
+ * /submitmembershippayment:
+ *   post:
+ *     summary: Submit payment for membership upgrade (Members only)
+ *     tags: [Member]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *               - paymentMode
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 example: 300
+ *               paymentMode:
+ *                 type: string
+ *                 enum: [cash, upi]
+ *                 example: upi
+ *               receipt:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional receipt image/pdf file
+ *     responses:
+ *       201:
+ *         description: Payment submitted successfully
+ *       400:
+ *         description: Validation error (missing fields or wrong amount)
+ *       401:
+ *         description: Unauthorized – token missing or invalid
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post(
+  "/submitmembershippayment",
+  verifyToken,
+  authorizeRole("member"),
+  upload.single("receipt"),
+  submitMembershipPayment
+);
 export default router;
