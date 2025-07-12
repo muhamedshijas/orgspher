@@ -10,6 +10,7 @@ import {
   filterByZone,
   getallMembers,
   getmemberbyId,
+  getPaymentByStatus,
   getPaymentsbyPaymentType,
   verifyMembershipPayment,
 } from "../controller/adminController.js";
@@ -242,6 +243,65 @@ router.get(
   authorizeRole("admin"),
   filterByStatus
 );
+/**
+ * @swagger
+ * /admin/filterpaymentbytype/{type}:
+ *   get:
+ *     summary: Filter  payments by Payment type (via URL param)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: type
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: "type of payment  [Accepted Values: event , membership]"
+ *     responses:
+ *       200:
+ *         description: Successfully fetched payments
+ *       400:
+ *         description: Invalid type of payment Selected
+ *       404:
+ *         description: payments not found
+ */
+router.get(
+  "/filterpaymentbytype/:type",
+  verifyToken,
+  authorizeRole("admin"),
+  getPaymentsbyPaymentType
+);
+
+/**
+ * @swagger
+ * /admin/filterpaymentbystatus/{status}:
+ *   get:
+ *     summary: Filter  Payments by status (via URL param)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: status
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: "Status to fetch Payments [Accepted Values: pending , rejected , paid ]"
+ *     responses:
+ *       200:
+ *         description: Successfully fetched payment
+ *       400:
+ *         description: Invalid status Selected
+ *       404:
+ *         description: Member not found
+ */
+router.get(
+  "/filterpaymentbystatus/:status",
+  verifyToken,
+  authorizeRole("admin"),
+  getPaymentByStatus
+);
 
 /**
  * @swagger
@@ -348,37 +408,6 @@ router.put("/editmember", verifyToken, authorizeRole("admin"), editMember);
 
 /**
  * @swagger
- * /admin/filterpaymentbytype/{type}:
- *   get:
- *     summary: Filter  payments by Payment type (via URL param)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: type
- *         schema:
- *           type: string
- *         required: true
- *         description: "type of payment  [Accepted Values: event , membership]"
- *     responses:
- *       200:
- *         description: Successfully fetched payments
- *       400:
- *         description: Invalid type of payment Selected
- *       404:
- *         description: payments not found
- */
-router.get(
-  "/filterpaymentbytype/:type",
-  verifyToken,
-  authorizeRole("admin"),
-  getPaymentsbyPaymentType
-);
-export default router;
-
-/**
- * @swagger
  * /admin/verifymembershippayment/{id}:
  *   put:
  *     summary: verify membership   (Admin only)
@@ -408,3 +437,5 @@ router.put(
   authorizeRole("admin"),
   verifyMembershipPayment
 );
+
+export default router;

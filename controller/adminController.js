@@ -306,7 +306,6 @@ export async function editMember(req, res) {
 
 export async function getPaymentsbyPaymentType(req, res) {
   const type = req.params.type;
-  console.log(type);
   if (!["event", "membership"].includes(type)) {
     return res
       .status(400)
@@ -335,7 +334,6 @@ export async function verifyMembershipPayment(req, res) {
   try {
     const paymentId = req.params.id;
 
-    // 1. Find the payment
     const payment = await paymentSchema.findOne({ _id: paymentId }).lean();
     if (!payment) {
       return res.status(404).json({
@@ -351,7 +349,6 @@ export async function verifyMembershipPayment(req, res) {
       });
     }
 
-    // 2. Validate receipt
     if (!payment.receiptUrl) {
       await paymentSchema.findByIdAndUpdate(paymentId, {
         status: "rejected",
@@ -363,7 +360,6 @@ export async function verifyMembershipPayment(req, res) {
       });
     }
 
-    // 3. Get member
     const member = await memberSchema.findById(payment.member);
     if (!member) {
       return res.status(404).json({
@@ -387,7 +383,6 @@ export async function verifyMembershipPayment(req, res) {
 
     const [newType] = newMembershipEntry;
 
-    // 4. Prevent downgrade or same level
     const levels = ["Bronze", "Silver", "Gold", "Platinum"];
     const currentIndex = levels.indexOf(member.membershipType);
     const newIndex = levels.indexOf(newType);
@@ -400,7 +395,6 @@ export async function verifyMembershipPayment(req, res) {
       });
     }
 
-    // 5. Approve payment and update member
     await Promise.all([
       memberSchema.findByIdAndUpdate(member._id, {
         membershipType: newType,
@@ -422,4 +416,30 @@ export async function verifyMembershipPayment(req, res) {
       error: error.message,
     });
   }
+}
+
+export async function getPaymentByStatus(req, res) {
+  const status = req.params.status;
+  if (!["paid", "rejected", "pending"].includes(status)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid status selected." });
+  }
+
+  const payments = await paymentSchema
+    .find({ status: status })
+    .select("member receiptUrl amount status rejectionReason")
+    .lean();
+
+  if (payments.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: `No payment found in   ${status}`,
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: `payments fetched successfully for  ${status}`,
+    data: payments,
+  });
 }
