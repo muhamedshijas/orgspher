@@ -12,6 +12,7 @@ import {
   getmemberbyId,
   getPaymentByStatus,
   getPaymentsbyPaymentType,
+  verifyEventPayment,
   verifyMembershipPayment,
 } from "../controller/adminController.js";
 import verifyToken from "../middlewares/adminAuthMiddleWare.js";
@@ -436,6 +437,38 @@ router.put(
   verifyToken,
   authorizeRole("admin"),
   verifyMembershipPayment
+);
+
+/**
+ * @swagger
+ * /admin/verifyeventpayment/{id}:
+ *   put:
+ *     summary: verify Event Payment   (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the payment to verify
+ *     responses:
+ *       200:
+ *         description: payment updated successfully
+ *       401:
+ *         description: Unauthorized – token required
+ *       403:
+ *         description: Forbidden – admin only
+ *       404:
+ *         description: payment not found
+ */
+router.put(
+  "/verifyeventpayment/:id",
+  verifyToken,
+  authorizeRole("admin"),
+  verifyEventPayment
 );
 
 export default router;

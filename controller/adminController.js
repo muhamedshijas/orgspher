@@ -7,6 +7,7 @@ import {
   VALID_ZONES,
 } from "../config/utils.js";
 import paymentSchema from "../models/paymentSchema.js";
+import eventSchema from "../models/eventSchema.js";
 
 export async function adminLogin(req, res) {
   const { email, password } = req.body;
@@ -442,4 +443,104 @@ export async function getPaymentByStatus(req, res) {
     message: `payments fetched successfully for  ${status}`,
     data: payments,
   });
+}
+
+export async function verifyEventPayment(req, res) {
+  try {
+    const paymentId = req.params.id;
+
+    // 1. Find payment
+    const payment = await paymentSchema.findById(paymentId).lean();
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    // 2. Check type
+    if (payment.type !== "event") {
+      return res.status(400).json({
+        success: false,
+        message: "This is not an event payment.",
+      });
+    }
+
+    // 3. Check receipt
+    if (!payment.receiptUrl) {
+      await paymentSchema.findByIdAndUpdate(paymentId, {
+        status: "rejected",
+        rejectionReason: "No receipt uploaded",
+      });
+      return res.status(400).json({
+        success: false,
+        message: "Payment rejected: No receipt uploaded.",
+      });
+    }
+
+    // 4. Validate member
+    const member = await memberSchema.findById(payment.member).lean();
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: "Member not found.",
+      });
+    }
+
+    // 5. Validate event
+    const event = await eventSchema.findById(payment.event).lean();
+    if (!event || event.status !== "upcoming") {
+      return res.status(404).json({
+        success: false,
+        message: "Associated event not found or not open.",
+      });
+    }
+
+    // 6. Validate zone/membership
+    if (!event.zone.includes(member.zone)) {
+      return res.status(403).json({
+        success: false,
+        message: `Member zone (${member.zone}) is not allowed for this event.`,
+      });
+    }
+
+    if (!event.membershipsAllowed.includes(member.membershipType)) {
+      return res.status(403).json({
+        success: false,
+        message: `Member membership (${member.membershipType}) not allowed for this event.`,
+      });
+    }
+
+    // 7. Validate fee
+    if (payment.amount !== event.fee) {
+      await paymentSchema.findByIdAndUpdate(paymentId, {
+        status: "rejected",
+        rejectionReason: "Amount mismatch with event fee",
+      });
+      return res.status(400).json({
+        success: false,
+        message: `Payment rejected: Expected ₹${event.fee}, got ₹${payment.amount}.`,
+      });
+    }
+
+    // 8. Approve payment
+    const updatedPayment = await paymentSchema.findByIdAndUpdate(paymentId, {
+      status: "paid",
+      rejectionReason: null,
+    }, { new: true });
+
+    return res.status(200).json({
+      success: true,
+      message: "Event payment verified and marked as paid.",
+      payment: updatedPayment,
+    });
+
+  } catch (error) {
+    console.error("Error verifying payment:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while verifying event payment.",
+      error: error.message,
+    });
+  }
 }

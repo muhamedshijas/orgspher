@@ -4,8 +4,8 @@ import memberSchema from "../models/memberSchema.js";
 
 export async function addEvent(req, res) {
   try {
-    const { title, zone, location, membershipAllowed } = req.body;
-
+    const { title, zone, location, membershipAllowed, fee } = req.body;
+    
     if (!title || !zone || !location || !membershipAllowed) {
       return res.status(400).json({
         success: false,
@@ -38,14 +38,16 @@ export async function addEvent(req, res) {
     if (existingevent) {
       return res.status(400).json({
         success: false,
-        message: `Event already exist`,
+        message: `Event already exists.`,
       });
     }
+
     const event = await eventSchema.create({
       title,
       zone,
       location,
       membershipsAllowed: membershipAllowed,
+      fee: typeof fee === "number" && fee >= 0 ? fee : 0, // 👈 default fee handling
     });
 
     return res.status(201).json({

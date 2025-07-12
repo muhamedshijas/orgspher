@@ -37,10 +37,15 @@ const eventSchema = new mongoose.Schema(
       enum: ["upcoming", "completed", "cancelled"],
       default: "upcoming",
     },
+    fee: {
+      type: Number,
+      default: 0, // 👈 means it's free by default
+      min: 0,
+    },
     attendees: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Member", // 👈 make sure your member schema model is named "Member"
+        ref: "Member",
       },
     ],
   },
@@ -48,4 +53,3 @@ const eventSchema = new mongoose.Schema(
 );
 
 export default mongoose.model("Event", eventSchema);
- 

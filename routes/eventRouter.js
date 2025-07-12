@@ -34,24 +34,33 @@ const router = express.Router();
  *             required:
  *               - title
  *               - zone
- *               - membershipsAllowed
+ *               - membershipAllowed
  *               - location
  *             properties:
  *               title:
  *                 type: string
  *                 example: Annual Meet
  *               zone:
- *                 type: string[]
- *                 example: ["North" , "South"]
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["North", "South"]
  *               location:
- *                  type: Number
- *                  example: Community Hall South Zone
+ *                 type: string
+ *                 example: Community Hall South Zone
  *               membershipAllowed:
- *                  type: string[]
- *                  example: ["Platinum","Gold"]
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["Platinum", "Gold"]
+ *               fee:
+ *                 type: number
+ *                 example: 0
  *     responses:
  *       201:
  *         description: Event added successfully
+ *       400:
+ *         description: Bad request – missing/invalid fields
  *       401:
  *         description: Unauthorized – token required
  *       403:
@@ -187,4 +196,9 @@ router.put("/updatestatus", verifyToken, authorizeRole("admin"), updateStatus);
  *       500:
  *         description: Server error
  */
-router.post("/markattendance",verifyToken,authorizeRole("admin"),markAttendance)
+router.post(
+  "/markattendance",
+  verifyToken,
+  authorizeRole("admin"),
+  markAttendance
+);
