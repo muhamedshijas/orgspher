@@ -315,7 +315,7 @@ export async function getPaymentsbyPaymentType(req, res) {
 
   const payments = await paymentSchema
     .find({ type: type })
-    .select("member receiptUrl amount")
+    .select("member receiptUrl amount status type rejectionReason")
     .lean();
 
   if (payments.length === 0) {
@@ -429,7 +429,7 @@ export async function getPaymentByStatus(req, res) {
 
   const payments = await paymentSchema
     .find({ status: status })
-    .select("member receiptUrl amount status rejectionReason")
+    .select("member receiptUrl amount status rejectionReason type")
     .lean();
 
   if (payments.length === 0) {
@@ -524,17 +524,20 @@ export async function verifyEventPayment(req, res) {
     }
 
     // 8. Approve payment
-    const updatedPayment = await paymentSchema.findByIdAndUpdate(paymentId, {
-      status: "paid",
-      rejectionReason: null,
-    }, { new: true });
+    const updatedPayment = await paymentSchema.findByIdAndUpdate(
+      paymentId,
+      {
+        status: "paid",
+        rejectionReason: null,
+      },
+      { new: true }
+    );
 
     return res.status(200).json({
       success: true,
       message: "Event payment verified and marked as paid.",
       payment: updatedPayment,
     });
-
   } catch (error) {
     console.error("Error verifying payment:", error.message);
     return res.status(500).json({

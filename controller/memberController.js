@@ -141,7 +141,6 @@ export async function submitEventPayment(req, res) {
     const memberId = req.user.memberId;
 
     const { amount, paymentMode, eventId } = req.body;
-    console.log(amount);
 
     const event = await eventSchema.findById(eventId).lean();
     const member = await memberSchema.findById(memberId).lean();
@@ -226,6 +225,92 @@ export async function submitEventPayment(req, res) {
     return res.status(500).json({
       success: false,
       message: "Server error while submitting event payment.",
+      error: error.message,
+    });
+  }
+}
+
+export async function getAllPaymentsStatus(req, res) {
+  const memberId = req.user.memberId;
+  const payment = await paymentSchema
+    .find({ member: memberId })
+    .select("title status type");
+  res.status(201).json({
+    success: true,
+    message: "Payments Fetched successfully",
+    payments: payment,
+  });
+}
+
+export async function getPaymentById(req, res) {
+  try {
+    const id = req.params.id;
+    const memberId = req.user.memberId;
+
+    if (!id || !memberId) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment ID and Member ID are required.",
+      });
+    }
+
+    // First find the payment with member for ownership validation
+    const payment = await paymentSchema
+      .findById(id)
+      .populate("member", "_id name") // For ownership check
+      .lean();
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found.",
+      });
+    }
+
+    if (payment.member._id.toString() !== memberId) {
+      return res.status(403).json({
+        success: false,
+        message: "This is not your payment.",
+      });
+    }
+
+    // If it's an event type, populate full event object
+    if (payment.type === "event") {
+      const fullPayment = await paymentSchema
+        .findById(id)
+        .populate("event", "title") // Full event details
+        .select(
+          "_id amount status type event paymentMode receiptUrl rejectionReason"
+        )
+        .lean();
+
+      return res.status(200).json({
+        success: true,
+        message: "Event payment fetched successfully.",
+        payment: fullPayment,
+      });
+    }
+
+    // For membership payment
+    const cleanedPayment = {
+      _id: payment._id,
+      amount: payment.amount,
+      status: payment.status,
+      type: payment.type,
+      paymentMode: payment.paymentMode,
+      receiptUrl: payment.receiptUrl,
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Membership payment fetched successfully.",
+      payment: cleanedPayment,
+    });
+  } catch (error) {
+    console.error("Error fetching payment:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching payment.",
       error: error.message,
     });
   }

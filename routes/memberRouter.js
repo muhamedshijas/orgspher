@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  getAllPaymentsStatus,
+  getPaymentById,
   memberLogin,
   submitEventPayment,
   submitMembershipPayment,
@@ -170,4 +172,51 @@ router.post(
   upload.single("receipt"),
   submitEventPayment
 );
+
+/**
+ * @swagger
+ * /viewallpayments:
+ *   get:
+ *     summary: View all payments
+ *     tags: [Member]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully fetched Payments
+ *       401:
+ *         description: Unauthorized – token required
+ *       403:
+ *         description: Forbidden – member access only
+ */
+router.get(
+  "/viewallpayments",
+  verifyToken,
+  authorizeRole("member"),
+  getAllPaymentsStatus
+);
+/**
+ * @swagger
+ * /getpaymentbyid/{id}:
+ *   get:
+ *     summary: Get a payment by ID (via URL param)
+ *     tags: [Member]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: payment ID to fetch
+ *     responses:
+ *       200:
+ *         description: Successfully fetched payment
+ *       400:
+ *         description: Invalid ID format
+ *       404:
+ *         description: Member not found
+ */
+router.get("/getpaymentbyid/:id", verifyToken, authorizeRole("member"),getPaymentById);
 export default router;

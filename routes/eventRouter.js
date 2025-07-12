@@ -4,8 +4,10 @@ import { authorizeRole } from "../middlewares/authorizeRole.js";
 import {
   addEvent,
   filterEventsByStatus,
+  getEventPayments,
+  listAttendees,
   listUpcomingEvents,
-  markAttendance,
+  markAttendee,
   updateStatus,
 } from "../controller/eventController.js";
 
@@ -200,5 +202,64 @@ router.post(
   "/markattendance",
   verifyToken,
   authorizeRole("admin"),
-  markAttendance
+  markAttendee
+);
+
+/**
+ * @swagger
+ * /event/listattendees/{id}:
+ *   get:
+ *     summary: Filter  events by status (via URL param)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: " Event id to fetch Attendees"
+ *     responses:
+ *       200:
+ *         description: Successfully fetched Attendees
+ *       400:
+ *         description: Invalid Status Selected
+ *       404:
+ *         description: Event not found
+ */
+router.get(
+  "/listattendees/:id",
+  verifyToken,
+  authorizeRole("admin"),
+  listAttendees
+);
+/**
+ * @swagger
+ * /event/listeventpayments/{id}:
+ *   get:
+ *     summary: List payment of each  events  (via URL param)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: " Event id to fetch payments"
+ *     responses:
+ *       200:
+ *         description: Successfully fetched payments
+ *       400:
+ *         description: Invalid Status Selected
+ *       404:
+ *         description: Event not found
+ */
+router.get(
+  "/listeventpayments/:id",
+  verifyToken,
+  authorizeRole("admin"),
+  getEventPayments
 );
