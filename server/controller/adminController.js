@@ -11,16 +11,15 @@ import eventSchema from "../models/eventSchema.js";
 
 export async function adminLogin(req, res) {
   const { email, password } = req.body;
-
   // Hardcoded admin
   const ADMIN = {
     email: "admin@orgsphere.com",
     password: "admin1234",
-  };
+  }; 
 
   if (email !== ADMIN.email || password !== ADMIN.password) {
     return res
-      .status(401)
+      .status(401) 
       .json({ success: false, message: "Invalid credentials" });
   }
 
